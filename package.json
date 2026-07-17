@@ -1,0 +1,37 @@
+{
+  "name": "node-llm-native",
+  "version": "1.0.0",
+  "description": "A lightweight Node.js wrapper around llama.cpp",
+  "license": "ISC",
+  "author": "Muhammad Nauman <numanch836@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nauman836/node-llm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/node-llm/issues"
+  },
+  "homepage": "https://github.com/your-username/node-llm#readme",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "node scripts/ensure-backend.js && node-gyp rebuild",
+    "install": "node scripts/ensure-backend.js && node-gyp rebuild",
+    "build": "node scripts/ensure-backend.js && node-gyp rebuild",
+    "test": "node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "llama.cpp",
+    "llm",
+    "nodejs",
+    "native-addon",
+    "gguf"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.9.0"
+  },
+  "gypfile": true
+}

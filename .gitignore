@@ -1,0 +1,10 @@
+node_modules/
+build/
+vendor/llama.cpp/build/
+*.log
+.DS_Store
+npm-debug.log*
+.yarn-integrity
+coverage/
+.env
+MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf
