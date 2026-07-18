@@ -1,8 +1,8 @@
-# node-llm
+# node-llm-native
 
-A lightweight Node.js wrapper for `llama.cpp` using native Node.js addons.
+A native Node.js addon wrapper for `llama.cpp`.
 
-This project exposes a simple JavaScript API for loading local GGUF models and generating text from Node.js. It builds `llama.cpp` as a shared backend, then compiles a native addon with `node-gyp`.
+This project exposes a simple JavaScript API for loading local GGUF models and generating text from Node.js. It builds the `llama.cpp` backend as shared libraries and compiles a native addon with `node-gyp`.
 
 ## Features
 
@@ -10,7 +10,7 @@ This project exposes a simple JavaScript API for loading local GGUF models and g
 - Simple `Model` / `createModel` interface
 - Automatic backend build via `scripts/ensure-backend.js`
 - Supports custom model path, device selection, GPU layers, context size, threads, and temperature
-- Example usage included in `example-js-api.js`
+- Example usage included in `example.js`
 
 ## Project Structure
 
@@ -18,9 +18,9 @@ This project exposes a simple JavaScript API for loading local GGUF models and g
 - `src/` - native addon C++ sources
 - `binding.gyp` - Node addon build configuration
 - `scripts/ensure-backend.js` - builds llama.cpp shared libs if missing
-- `vendor/llama.cpp/` - bundled llama.cpp source tree
+- `vendor/llama.cpp/` - llama.cpp git submodule
 - `test/smoke.js` - basic smoke test for the addon
-- `example-js-api.js` - usage example
+- `example.js` - usage example
 - `package.json` - package metadata and install scripts
 
 ## Prerequisites
@@ -41,14 +41,21 @@ Before installing, make sure your system has:
 Clone the repository and install dependencies:
 
 ```bash
-git clone <your-repository-url> node-llm-native
+git clone --recurse-submodules https://github.com/Nauman836/node-llm-native.git node-llm-native
 cd node-llm-native
+npm install
+```
+
+If you already cloned without submodules, run:
+
+```bash
+git submodule update --init --recursive
 npm install
 ```
 
 The `install` script runs `node scripts/ensure-backend.js && node-gyp rebuild`, which will:
 
-1. build the bundled `llama.cpp` backend shared libraries if they are missing
+1. build the `llama.cpp` backend shared libraries if they are missing
 2. compile the native addon `node_llm_native`
 
 ### From npm
@@ -56,14 +63,14 @@ The `install` script runs `node scripts/ensure-backend.js && node-gyp rebuild`, 
 Once published to npm, users should be able to install directly:
 
 ```bash
-npm install node-llm
+npm install node-llm-native
 ```
 
 > Note: This package currently contains native bindings and a bundled llama.cpp backend, so installation requires the native build toolchain above.
 
 ## Usage
 
-Example from `example-js-api.js`:
+Example from `example.js`:
 
 ```js
 const { Model, createModel } = require('./');
@@ -159,23 +166,24 @@ vendor/llama.cpp/build/
 
 ## Review of the Project
 
-This project is a strong foundation for a Node.js wrapper around `llama.cpp`.
+This project is a solid native Node.js wrapper around `llama.cpp`.
 
 What works well:
 
-- Simple wrapper API with both `Model` and `createModel`
-- Automatic backend build from bundled `vendor/llama.cpp`
-- Native addon integration through `node-gyp`
-- A clean example and smoke test to verify the addon is built
+- Clear JavaScript wrapper API with `Model` and `createModel`
+- Automatic native backend build using `scripts/ensure-backend.js`
+- `node-gyp` addon build configured through `binding.gyp`
+- Example script and smoke test available for quick verification
+- The repository now includes proper package metadata and a `.gitignore`
+- `llama.cpp` is tracked as a submodule, which keeps the top-level repo cleaner
 
-Areas to improve before publishing:
+Recommended improvements:
 
-- Add package metadata in `package.json` (`author`, `repository`, `bugs`, `homepage`, `keywords`)
-- Add root-level `README.md` (this file) for GitHub and npm users
-- Add a `.gitignore` to avoid committing build artifacts
-- Clarify supported Node versions and platform compatibility
-- Expand tests beyond the smoke test to cover model loading and generation
-- Consider shipping prebuilt binaries or a fallback for users without a full native toolchain
+- Expand test coverage to validate model loading, generation output, and error handling
+- Add a runtime error message when model loading or backend initialization fails
+- Document supported platforms and any OS-specific build needs
+- Consider adding an optional `files` field or `.npmignore` for npm packaging
+- Optionally provide prebuilt binaries or a build matrix for users without a native build toolchain
 
 ## Notes
 

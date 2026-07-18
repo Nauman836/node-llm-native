@@ -10,6 +10,10 @@ namespace
 {
     bool g_backend_initialized = false;
 
+    void silence_log(ggml_log_level /*level*/, const char* /*text*/, void* /*user_data*/)
+    {
+    }
+
     std::string resolve_model_path(const std::string& path)
     {
         std::filesystem::path candidate(path);
@@ -68,6 +72,8 @@ bool Model::load(const std::string& path, int gpu_layers, int context_size, int 
     reset();
 
     const std::string resolved_path = resolve_model_path(path);
+
+    llama_log_set(silence_log, nullptr);
 
     if (!g_backend_initialized)
     {

@@ -1,6 +1,7 @@
 node_modules/
 build/
 vendor/llama.cpp/build/
+.vscode/
 *.log
 .DS_Store
 npm-debug.log*

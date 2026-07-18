@@ -1,3 +1,16 @@
+const fs = require('fs');
+const path = require('path');
+
+const backendDir = path.resolve(__dirname, 'vendor', 'llama.cpp', 'build', 'bin');
+const delimiter = process.platform === 'win32' ? ';' : ':';
+
+if (process.platform === 'linux' && fs.existsSync(backendDir)) {
+  const current = process.env.LD_LIBRARY_PATH ? process.env.LD_LIBRARY_PATH.split(delimiter) : [];
+  if (!current.includes(backendDir)) {
+    process.env.LD_LIBRARY_PATH = [backendDir, ...current].join(delimiter);
+  }
+}
+
 const addon = require('./build/Release/node_llm_native');
 
 function normalizeOptions(options = {}) {

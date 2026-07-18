@@ -1,39 +1,70 @@
-const { spawnSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { spawnSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
-const root = path.resolve(__dirname, '..');
-const backendDir = path.join(root, 'vendor', 'llama.cpp', 'build');
-const libDir = path.join(backendDir, 'bin');
+const root = path.resolve(__dirname, "..");
+const backendDir = path.join(root, "vendor", "llama.cpp", "build");
+const libDir = path.join(backendDir, "bin");
 const required = [
-  path.join(libDir, 'libllama.so'),
-  path.join(libDir, 'libggml.so'),
-  path.join(libDir, 'libggml-base.so')
+  path.join(libDir, "libllama.so"),
+  path.join(libDir, "libggml.so"),
+  path.join(libDir, "libggml-base.so"),
 ];
+
+if (fs.existsSync(backendDir)) {
+  fs.rmSync(backendDir, { recursive: true, force: true });
+}
 
 const missing = required.filter((p) => !fs.existsSync(p));
 if (missing.length === 0) {
-  console.log('llama.cpp backend already available');
+  console.log("llama.cpp backend already available");
   process.exit(0);
 }
 
-console.log('Building llama.cpp backend for native addon...');
-const cmake = spawnSync('cmake', ['-S', path.join(root, 'vendor', 'llama.cpp'), '-B', backendDir, '-DBUILD_SHARED_LIBS=ON'], {
-  cwd: root,
-  stdio: 'inherit'
-});
+console.log("Building llama.cpp backend for native addon...");
+const cmake = spawnSync(
+  "cmake",
+  [
+    "-S",
+    path.join(root, "vendor", "llama.cpp"),
+    "-B",
+    backendDir,
+    "-DBUILD_SHARED_LIBS=ON",
+    "-DCMAKE_BUILD_RPATH=$ORIGIN",
+    "-DCMAKE_INSTALL_RPATH=$ORIGIN",
+    "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON",
+  ],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
 if (cmake.status !== 0) {
-  console.error('Failed to configure llama.cpp backend');
+  console.error("Failed to configure llama.cpp backend");
   process.exit(cmake.status || 1);
 }
 
-const build = spawnSync('cmake', ['--build', backendDir, '--config', 'Release', '--target', 'llama', 'ggml', 'ggml-base', '-j2'], {
-  cwd: root,
-  stdio: 'inherit'
-});
+const build = spawnSync(
+  "cmake",
+  [
+    "--build",
+    backendDir,
+    "--config",
+    "Release",
+    "--target",
+    "llama",
+    "ggml",
+    "ggml-base",
+    "-j2",
+  ],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
 if (build.status !== 0) {
-  console.error('Failed to build llama.cpp backend');
+  console.error("Failed to build llama.cpp backend");
   process.exit(build.status || 1);
 }
 
-console.log('llama.cpp backend built successfully');
+console.log("llama.cpp backend built successfully");

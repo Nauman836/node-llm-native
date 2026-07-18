@@ -14,11 +14,28 @@ const advancedModel = createModel({
 });
 
 (async () => {
-  const beginnerLoaded = await beginnerModel.load();
-  const reply = await beginnerModel.generate('Hello, how are you?', 24);
-  console.log('beginner reply:', reply);
+  try {
+    console.log('Loading model...');
+    const beginnerLoaded = await beginnerModel.load();
+    console.log('Model loaded:', beginnerLoaded ? 'yes' : 'no');
 
-  const advancedLoaded = await advancedModel.load();
-  console.log('advanced config:', advancedModel.getConfig());
-  console.log('advanced reply:', await advancedModel.chat('Tell me a short joke.', 20));
+    const prompt = 'Hello, how are you?';
+    const reply = await beginnerModel.generate(prompt, 24);
+    console.log('\nPrompt:');
+    console.log(prompt);
+    console.log('\nModel reply:');
+    console.log(reply);
+
+    const advancedLoaded = await advancedModel.load();
+    console.log('\nAdvanced model loaded:', advancedLoaded ? 'yes' : 'no');
+    const jokePrompt = 'Tell me a short joke.';
+    const jokeReply = await advancedModel.chat(jokePrompt, 20);
+    console.log('\nPrompt:');
+    console.log(jokePrompt);
+    console.log('\nModel reply:');
+    console.log(jokeReply);
+  } catch (error) {
+    console.error('Example failed:', error.message);
+    process.exit(1);
+  }
 })();

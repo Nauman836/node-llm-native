@@ -1,11 +1,11 @@
-const addon = require('../build/Release/node_llm_native');
+const pkg = require('../');
 
-if (!addon || typeof addon.createModel !== 'function') {
+if (!pkg || typeof pkg.createModel !== 'function') {
   console.error('Native addon is not built');
   process.exit(1);
 }
 
-const model = addon.createModel({
+const model = pkg.createModel({
   model: './MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
   device: 'auto',
   gpuLayers: -1,

@@ -1,17 +1,17 @@
 {
   "name": "node-llm-native",
   "version": "1.0.0",
-  "description": "A lightweight Node.js wrapper around llama.cpp",
+  "description": "Native Node.js wrapper for llama.cpp with a lightweight GGUF model loader",
   "license": "ISC",
   "author": "Muhammad Nauman <numanch836@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Nauman836/node-llm.git"
+    "url": "git+https://github.com/Nauman836/node-llm-native.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/node-llm/issues"
+    "url": "https://github.com/Nauman836/node-llm-native/issues"
   },
-  "homepage": "https://github.com/your-username/node-llm#readme",
+  "homepage": "https://github.com/Nauman836/node-llm-native#readme",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
