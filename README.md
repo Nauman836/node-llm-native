@@ -60,6 +60,8 @@ The `install` script runs `node scripts/ensure-backend.js && node-gyp rebuild`, 
 
 ### From npm
 
+>Note: under development
+
 Once published to npm, users should be able to install directly:
 
 ```bash
