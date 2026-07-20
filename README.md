@@ -13,7 +13,7 @@ This project exposes a simple JavaScript API for loading local GGUF models and g
 
   > Note: Currently this project is under development and only supports cpu backend, so make sure that while using createModel class set the device to 'cpu' or 'auto'.
 
-- Example usage included in `example.js`
+- Example usage included in `example/example.js`
 
 ## Project Structure
 
