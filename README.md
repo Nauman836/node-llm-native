@@ -10,6 +10,7 @@ This project exposes a simple JavaScript API for loading local GGUF models and g
 - Simple `Model` / `createModel` interface
 - Automatic backend build via `scripts/ensure-backend.js`
 - Supports custom model path, device selection, GPU layers, context size, threads, and temperature
+  > Note: Currently this project is under development and only supports cpu backend, so make sure that while using createModel class set the device to 'cpu' or 'auto'.
 - Example usage included in `example.js`
 
 ## Project Structure
@@ -60,7 +61,7 @@ The `install` script runs `node scripts/ensure-backend.js && node-gyp rebuild`, 
 
 ### From npm
 
->Note: right now node-llm-native package is not available at npm. it is under development.
+> Note: Right now node-llm-native package is not available at npm. It is under development.
 
 Once published to npm, users should be able to install directly:
 
@@ -77,10 +78,10 @@ Example from `example.js`:
 ```js
 const { Model, createModel } = require('./');
 
-const beginnerModel = new Model('./MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf');
+const beginnerModel = new Model('model_path.gguf');
 
 const advancedModel = createModel({
-  model: './MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
+  model: 'model_path.gguf',
   device: 'auto',
   gpuLayers: -1,
   contextSize: 2048,
@@ -91,6 +92,10 @@ const advancedModel = createModel({
 (async () => {
   await beginnerModel.load();
   const reply = await beginnerModel.generate('Hello, how are you?', 24);
+  console.log('reply:', reply);
+
+  await advancedModel.load();
+  const response = await advancedModel.generate('Hello, how are you?', 24);
   console.log('reply:', reply);
 })();
 ```
@@ -116,7 +121,7 @@ const advancedModel = createModel({
 To build manually:
 
 ```bash
-npm run prepare
+npm run build
 ```
 
 To run the smoke test:

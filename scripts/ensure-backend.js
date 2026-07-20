@@ -1,70 +1,108 @@
 const { spawnSync } = require("child_process");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const backendDir = path.join(root, "vendor", "llama.cpp", "build");
 const libDir = path.join(backendDir, "bin");
-const required = [
-  path.join(libDir, "libllama.so"),
-  path.join(libDir, "libggml.so"),
-  path.join(libDir, "libggml-base.so"),
-];
 
-if (fs.existsSync(backendDir)) {
-  fs.rmSync(backendDir, { recursive: true, force: true });
-}
+const required =
+  process.platform === "win32"
+    ? [
+        path.join(libDir, "llama.dll"),
+        path.join(libDir, "ggml.dll"),
+        path.join(libDir, "ggml-base.dll"),
+        path.join(libDir, "ggml-cpu.dll"),
+      ]
+    : process.platform === "darwin"
+    ? [
+        path.join(libDir, "libllama.dylib"),
+        path.join(libDir, "libggml.dylib"),
+        path.join(libDir, "libggml-base.dylib"),
+        path.join(libDir, "libggml-cpu.dylib"),
+      ]
+    : [
+        path.join(libDir, "libllama.so"),
+        path.join(libDir, "libggml.so"),
+        path.join(libDir, "libggml-base.so"),
+        path.join(libDir, "libggml-cpu.so"),
+      ];
 
-const missing = required.filter((p) => !fs.existsSync(p));
+// Skip if already built
+const missing = required.filter((f) => !fs.existsSync(f));
+
 if (missing.length === 0) {
-  console.log("llama.cpp backend already available");
+  console.log("✓ llama.cpp backend already built.");
   process.exit(0);
 }
 
-console.log("Building llama.cpp backend for native addon...");
-const cmake = spawnSync(
-  "cmake",
-  [
-    "-S",
-    path.join(root, "vendor", "llama.cpp"),
-    "-B",
-    backendDir,
-    "-DBUILD_SHARED_LIBS=ON",
+console.log("Building llama.cpp CPU backend...");
+
+const configureArgs = [
+  "-S",
+  path.join(root, "vendor", "llama.cpp"),
+  "-B",
+  backendDir,
+  "-DBUILD_SHARED_LIBS=ON",
+  "-DGGML_CPU=ON",
+  "-DGGML_CUDA=OFF",
+  "-DGGML_METAL=OFF",
+  "-DGGML_VULKAN=OFF",
+  "-DGGML_HIP=OFF",
+  "-DGGML_SYCL=OFF",
+];
+
+if (process.platform !== "win32") {
+  configureArgs.push(
+    "-DCMAKE_BUILD_TYPE=Release",
     "-DCMAKE_BUILD_RPATH=$ORIGIN",
     "-DCMAKE_INSTALL_RPATH=$ORIGIN",
-    "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON",
-  ],
-  {
-    cwd: root,
-    stdio: "inherit",
-  },
-);
-if (cmake.status !== 0) {
-  console.error("Failed to configure llama.cpp backend");
-  process.exit(cmake.status || 1);
+    "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON"
+  );
 }
 
-const build = spawnSync(
-  "cmake",
-  [
-    "--build",
-    backendDir,
-    "--config",
-    "Release",
-    "--target",
-    "llama",
-    "ggml",
-    "ggml-base",
-    "-j2",
-  ],
-  {
-    cwd: root,
-    stdio: "inherit",
-  },
-);
+
+
+const configure = spawnSync("cmake", configureArgs, {
+  cwd: root,
+  stdio: "inherit",
+});
+
+if (configure.status !== 0) {
+  process.exit(configure.status || 1);
+}
+
+const buildArgs = [
+  "--build",
+  backendDir,
+  "--parallel",
+  os.cpus().length.toString(),
+];
+
+if (process.platform === "win32") {
+  buildArgs.splice(2, 0, "--config", "Release");
+}
+
+const build = spawnSync("cmake", buildArgs, {
+  cwd: root,
+  stdio: "inherit",
+});
+
 if (build.status !== 0) {
-  console.error("Failed to build llama.cpp backend");
   process.exit(build.status || 1);
 }
 
-console.log("llama.cpp backend built successfully");
+const stillMissing = required.filter((f) => !fs.existsSync(f));
+
+if (stillMissing.length) {
+  console.error("\nFailed to build required llama.cpp libraries:\n");
+
+  for (const file of stillMissing) {
+    console.error("  " + file);
+  }
+
+  process.exit(1);
+}
+
+console.log("✓ llama.cpp CPU backend built successfully.");

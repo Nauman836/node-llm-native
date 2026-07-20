@@ -1,11 +1,11 @@
-const { Model, createModel } = require('.');
+const { Model, createModel } = require('../');
 
 // Beginner-friendly: just pass a model path string
-const beginnerModel = new Model('./MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf');
+const beginnerModel = new Model('/home/nauman/Desktop/CodingFiles/models/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf');
 
 // Advanced: pass an options object for full control
 const advancedModel = createModel({
-  model: './MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
+  model: '/home/nauman/Desktop/CodingFiles/models/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
   device: 'auto',
   gpuLayers: -1,
   contextSize: 2048,

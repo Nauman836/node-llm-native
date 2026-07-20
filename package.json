@@ -15,9 +15,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "prepare": "node scripts/ensure-backend.js && node-gyp rebuild",
-    "install": "node scripts/ensure-backend.js && node-gyp rebuild",
-    "build": "node scripts/ensure-backend.js && node-gyp rebuild",
+    "install": "node scripts/prerequisites.js && scripts/ensure-backend.js && node-gyp rebuild",
+    "build": "node scripts/prerequisites.js && node scripts/ensure-backend.js && node-gyp rebuild",
     "test": "node test/smoke.js"
   },
   "engines": {

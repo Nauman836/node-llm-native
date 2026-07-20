@@ -1,6 +1,6 @@
 #include <napi.h>
 
-#include "model.h"
+#include "../model/model.h"
 
 #include <memory>
 #include <string>

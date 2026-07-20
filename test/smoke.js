@@ -6,7 +6,7 @@ if (!pkg || typeof pkg.createModel !== 'function') {
 }
 
 const model = pkg.createModel({
-  model: './MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
+  model: '/home/nauman/Desktop/CodingFiles/models/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf',
   device: 'auto',
   gpuLayers: -1,
   contextSize: 2048,
