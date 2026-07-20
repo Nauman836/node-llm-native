@@ -10,18 +10,22 @@ This project exposes a simple JavaScript API for loading local GGUF models and g
 - Simple `Model` / `createModel` interface
 - Automatic backend build via `scripts/ensure-backend.js`
 - Supports custom model path, device selection, GPU layers, context size, threads, and temperature
+
   > Note: Currently this project is under development and only supports cpu backend, so make sure that while using createModel class set the device to 'cpu' or 'auto'.
+
 - Example usage included in `example.js`
 
 ## Project Structure
 
 - `index.js` - JavaScript wrapper and API entrypoint
-- `src/` - native addon C++ sources
+- `addon/` - native addon C++ sources
+- `model/` - C++ model sources
 - `binding.gyp` - Node addon build configuration
 - `scripts/ensure-backend.js` - builds llama.cpp shared libs if missing
+- `scripts/prerequisites.js` - ensures that build tools are available
 - `vendor/llama.cpp/` - llama.cpp git submodule
 - `test/smoke.js` - basic smoke test for the addon
-- `example.js` - usage example
+- `example/example.js` - usage example
 - `package.json` - package metadata and install scripts
 
 ## Prerequisites
@@ -127,5 +131,5 @@ npm run build
 To run the smoke test:
 
 ```bash
-npm test
+npm run test
 ```
