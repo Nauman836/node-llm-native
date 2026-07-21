@@ -1,8 +1,8 @@
 {
   "name": "node-llm-native",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Native Node.js wrapper for llama.cpp with a lightweight GGUF model loader",
-  "license": "ISC",
+  "license": "MIT",
   "author": "Muhammad Nauman <numanch836@gmail.com>",
   "repository": {
     "type": "git",
@@ -15,8 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "install": "node scripts/prerequisites.js && scripts/ensure-backend.js && node-gyp rebuild",
-    "build": "node scripts/prerequisites.js && node scripts/ensure-backend.js && node-gyp rebuild",
+    "build": "node scripts/prerequisites.js && node scripts/build-backend.js && node-gyp rebuild",
     "test": "node test/smoke.js"
   },
   "engines": {
@@ -32,5 +31,19 @@
   "dependencies": {
     "node-addon-api": "^8.9.0"
   },
-  "gypfile": true
+  "gypfile": true,
+  "devDependencies": {
+    "node-gyp": "^13.0.1"
+  },
+  "files": [
+  "addon/",
+  "model/",
+  "scripts/",
+  "vendor/",
+  "test/",
+  "index.js",
+  "binding.gyp",
+  "README.md",
+  "LICENSE"
+]
 }

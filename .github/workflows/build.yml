@@ -1,0 +1,113 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            folder: linux-x64
+            lib_ext: so
+
+          - os: windows-latest
+            folder: win32-x64
+            lib_ext: dll
+
+          - os: macos-latest
+            folder: darwin-arm64
+            lib_ext: dylib
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build addon
+        run: npm run build
+
+      - name: Create output directory
+        shell: bash
+        run: |
+          mkdir -p prebuilt/${{ matrix.folder }}
+
+      - name: Copy Linux/macOS libraries
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cp vendor/llama.cpp/build/bin/*.${{ matrix.lib_ext }} prebuilt/${{ matrix.folder }}/
+          cp build/Release/*.node prebuilt/${{ matrix.folder }}/
+
+      - name: Copy Windows libraries
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force prebuilt/${{ matrix.folder }}
+          Copy-Item vendor/llama.cpp/build/bin/*.dll prebuilt/${{ matrix.folder }}/
+          Copy-Item build/Release/*.node prebuilt/${{ matrix.folder }}/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.folder }}
+          path: prebuilt/${{ matrix.folder }}
+
+  release:
+
+    if: startsWith(github.ref, 'refs/tags/')
+
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+
+      - name: Zip Linux
+        run: |
+          cd release
+          zip -r linux-x64.zip linux-x64
+
+      - name: Zip Windows
+        run: |
+          cd release
+          zip -r win32-x64.zip win32-x64
+
+      - name: Zip macOS
+        run: |
+          cd release
+          zip -r darwin-arm64.zip darwin-arm64
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/linux-x64.zip
+            release/win32-x64.zip
+            release/darwin-arm64.zip
