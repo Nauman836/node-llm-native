@@ -10,11 +10,11 @@ namespace
 {
     bool g_backend_initialized = false;
 
-    void silence_log(ggml_log_level /*level*/, const char* /*text*/, void* /*user_data*/)
+    void silence_log(ggml_log_level /*level*/, const char * /*text*/, void * /*user_data*/)
     {
     }
 
-    std::string resolve_model_path(const std::string& path)
+    std::string resolve_model_path(const std::string &path)
     {
         std::filesystem::path candidate(path);
         if (candidate.is_absolute() || std::filesystem::exists(candidate))
@@ -67,7 +67,7 @@ void Model::reset()
     loaded_ = false;
 }
 
-bool Model::load(const std::string& path, int gpu_layers, int context_size, int threads, float temperature)
+bool Model::load(const std::string &path, int gpu_layers, int context_size, int threads, float temperature)
 {
     reset();
 
@@ -125,7 +125,7 @@ bool Model::load(const std::string& path, int gpu_layers, int context_size, int 
     return true;
 }
 
-bool Model::tokenize(const std::string& prompt, std::vector<llama_token>& tokens) const
+bool Model::tokenize(const std::string &prompt, std::vector<llama_token> &tokens) const
 {
     if (!loaded_ || vocab_ == nullptr)
     {
@@ -160,7 +160,7 @@ std::string Model::token_to_piece(llama_token token) const
     return std::string(buffer, n);
 }
 
-std::string Model::generate(const std::string& prompt, int max_tokens)
+std::string Model::generate(const std::string &prompt, int max_tokens)
 {
     if (!loaded_ || context_ == nullptr || model_ == nullptr || sampler_ == nullptr)
     {
@@ -219,11 +219,11 @@ std::string Model::generate(const std::string& prompt, int max_tokens)
 }
 
 #if defined(LLAMA_STANDALONE)
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     Model model;
 
-    std::string model_path = "MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf";
+    std::string model_path = "model_path.gguf";
     std::string prompt = "Hello, how are you?";
     int max_tokens = 32;
 

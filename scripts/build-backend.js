@@ -5,29 +5,32 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const backendDir = path.join(root, "vendor", "llama.cpp", "build");
-const libDir = path.join(backendDir, "bin");
+const libDir = path.join(
+  backendDir,
+  process.platform === "win32" ? "bin/Release" : "bin",
+);
 
 const required =
   process.platform === "win32"
     ? [
-        path.join(libDir, "libllama.dll"),
-        path.join(libDir, "libggml.dll"),
-        path.join(libDir, "libggml-base.dll"),
-        path.join(libDir, "libggml-cpu.dll"),
+        path.join(libDir, "llama.dll"),
+        path.join(libDir, "ggml.dll"),
+        path.join(libDir, "ggml-base.dll"),
+        path.join(libDir, "ggml-cpu.dll"),
       ]
     : process.platform === "darwin"
-    ? [
-        path.join(libDir, "libllama.dylib"),
-        path.join(libDir, "libggml.dylib"),
-        path.join(libDir, "libggml-base.dylib"),
-        path.join(libDir, "libggml-cpu.dylib"),
-      ]
-    : [
-        path.join(libDir, "libllama.so"),
-        path.join(libDir, "libggml.so"),
-        path.join(libDir, "libggml-base.so"),
-        path.join(libDir, "libggml-cpu.so"),
-      ];
+      ? [
+          path.join(libDir, "libllama.dylib"),
+          path.join(libDir, "libggml.dylib"),
+          path.join(libDir, "libggml-base.dylib"),
+          path.join(libDir, "libggml-cpu.dylib"),
+        ]
+      : [
+          path.join(libDir, "libllama.so"),
+          path.join(libDir, "libggml.so"),
+          path.join(libDir, "libggml-base.so"),
+          path.join(libDir, "libggml-cpu.so"),
+        ];
 
 // Skip if already built
 const missing = required.filter((f) => !fs.existsSync(f));
@@ -58,11 +61,9 @@ if (process.platform !== "win32") {
     "-DCMAKE_BUILD_TYPE=Release",
     "-DCMAKE_BUILD_RPATH=$ORIGIN",
     "-DCMAKE_INSTALL_RPATH=$ORIGIN",
-    "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON"
+    "-DCMAKE_BUILD_RPATH_USE_ORIGIN=ON",
   );
 }
-
-
 
 const configure = spawnSync("cmake", configureArgs, {
   cwd: root,
