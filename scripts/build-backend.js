@@ -10,10 +10,10 @@ const libDir = path.join(backendDir, "bin");
 const required =
   process.platform === "win32"
     ? [
-        path.join(libDir, "llama.dll"),
-        path.join(libDir, "ggml.dll"),
-        path.join(libDir, "ggml-base.dll"),
-        path.join(libDir, "ggml-cpu.dll"),
+        path.join(libDir, "libllama.dll"),
+        path.join(libDir, "libggml.dll"),
+        path.join(libDir, "libggml-base.dll"),
+        path.join(libDir, "libggml-cpu.dll"),
       ]
     : process.platform === "darwin"
     ? [
