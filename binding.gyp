@@ -70,7 +70,7 @@
             },
 
             "libraries": [
-              "<(module_root_dir)/vendor/llama.cpp/build/bin/llama.lib"
+              "<(module_root_dir)/vendor/llama.cpp/build/bin/Release/llama.lib"
             ]
           }
         ]
