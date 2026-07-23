@@ -99,6 +99,10 @@ macOS
 
 ## From npm
 
+```bash
+npm install node-llm-native
+```
+
 ## Manual
 
 ## Clone
