@@ -97,6 +97,10 @@ macOS
 
 # Installation
 
+## From npm
+
+## Manual
+
 ## Clone
 
 ```bash
