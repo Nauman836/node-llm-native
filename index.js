@@ -19,7 +19,23 @@ if (process.platform === "linux" && fs.existsSync(backendDir)) {
   }
 }
 
-const addon = require("./build/Release/node_llm_native");
+const root = __dirname;
+
+let addon;
+
+const prebuiltAddon = path.join(root, "prebuilt", "node_llm_native.node");
+const localAddon = path.join(root, "build", "Release", "node_llm_native.node");
+
+if (fs.existsSync(prebuiltAddon)) {
+  addon = require(prebuiltAddon);
+} else if (fs.existsSync(localAddon)) {
+  addon = require(localAddon);
+} else {
+  throw new Error(
+    "node-llm-native binary not found. Run 'npm install' or 'npm run build'."
+  );
+}
+
 
 function normalizeOptions(options = {}) {
   if (typeof options === "string") {

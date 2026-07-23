@@ -1,0 +1,11 @@
+.github/
+cpp-llm-native/
+build/
+example/
+test/
+node_modules/
+
+.gitmodules
+CMakeLists.txt
+
+scripts/prerequisites.js

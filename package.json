@@ -15,6 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "install": "node scripts/install.js",
     "build": "node scripts/prerequisites.js && cmake-js compile",
     "test": "node test/smoke.js"
   },
@@ -29,7 +30,8 @@
     "gguf"
   ],
   "dependencies": {
-    "node-addon-api": "^8.9.0"
+    "node-addon-api": "^8.9.0",
+    "unzipper": "^0.12.5"
   },
   "devDependencies": {
     "cmake-js": "^8.0.0"

@@ -1,0 +1,48 @@
+{
+  "name": "node-llm-native",
+  "version": "0.1.0",
+  "description": "Native Node.js wrapper for llama.cpp with a lightweight GGUF model loader",
+  "license": "MIT",
+  "author": "Muhammad Nauman <numanch836@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nauman836/node-llm-native.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nauman836/node-llm-native/issues"
+  },
+  "homepage": "https://github.com/Nauman836/node-llm-native#readme",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/prerequisites.js && cmake-js compile",
+    "test": "node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "llama.cpp",
+    "llm",
+    "nodejs",
+    "native-addon",
+    "gguf"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.9.0"
+  },
+  "devDependencies": {
+    "cmake-js": "^8.0.0"
+  },
+  "files": [
+    "addon/",
+    "cpp-llm-native/",
+    "scripts/",
+    "test/",
+    "example/",
+    "CMakeLists.txt",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ]
+}
