@@ -1,6 +1,6 @@
 #include <napi.h>
 
-#include "../model/model.h"
+#include "llm-native/model.h"
 
 #include <memory>
 #include <string>

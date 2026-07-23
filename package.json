@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "node scripts/prerequisites.js && node scripts/build-backend.js && node-gyp rebuild",
+    "build": "node scripts/prerequisites.js && cmake-js compile",
     "test": "node test/smoke.js"
   },
   "engines": {
@@ -31,19 +31,18 @@
   "dependencies": {
     "node-addon-api": "^8.9.0"
   },
-  "gypfile": true,
   "devDependencies": {
-    "node-gyp": "^13.0.1"
+    "cmake-js": "^8.0.0"
   },
   "files": [
-  "addon/",
-  "model/",
-  "scripts/",
-  "vendor/",
-  "test/",
-  "index.js",
-  "binding.gyp",
-  "README.md",
-  "LICENSE"
-]
+    "addon/",
+    "cpp-llm-native/",
+    "scripts/",
+    "test/",
+    "example/",
+    "CMakeLists.txt",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ]
 }
