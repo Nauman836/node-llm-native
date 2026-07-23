@@ -37,12 +37,7 @@
     "cmake-js": "^8.0.0"
   },
   "files": [
-    "addon/",
-    "cpp-llm-native/",
-    "scripts/",
-    "test/",
-    "example/",
-    "CMakeLists.txt",
+    "scripts/install.js",
     "index.js",
     "README.md",
     "LICENSE"
