@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: linux-x64
+
+          - os: windows-latest
+            artifact: windows-x64
+
+          - os: macos-latest
+            artifact: macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Create package (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir package
+          cp build/Release/node_llm_native.node package/
+          cp package.json package/
+          cp README.md package/
+          cd package
+          zip -r ../node-llm-native-${{ matrix.artifact }}.zip .
+
+      - name: Create package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory package
+
+          Copy-Item build/Release/node_llm_native.node package/
+          Copy-Item package.json package/
+          Copy-Item README.md package/
+
+          Compress-Archive `
+            -Path package/* `
+            -DestinationPath node-llm-native-${{ matrix.artifact }}.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: node-llm-native-${{ matrix.artifact }}.zip
+
+  release:
+    needs: build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            linux-x64/node-llm-native-linux-x64.zip
+            windows-x64/node-llm-native-windows-x64.zip
+            macos-arm64/node-llm-native-macos-arm64.zip
