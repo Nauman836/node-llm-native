@@ -8,3 +8,4 @@ npm-debug.log*
 coverage/
 .env
 prebuilt/*
+package-lock.json
