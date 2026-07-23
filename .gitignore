@@ -7,3 +7,4 @@ npm-debug.log*
 .yarn-integrity
 coverage/
 .env
+prebuilt/
