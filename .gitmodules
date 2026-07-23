@@ -1,3 +1,0 @@
-[submodule "cpp-llm-native/vendor/llama.cpp"]
-	path = cpp-llm-native/vendor/llama.cpp
-	url = https://github.com/ggml-org/llama.cpp.git
