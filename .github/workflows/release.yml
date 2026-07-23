@@ -50,7 +50,7 @@ jobs:
         run: |
           mkdir package
           cp build/Release/node_llm_native.node package/
-          cp package.json package/
+          cp LICENSE package/
           cp README.md package/
           cd package
           zip -r ../node-llm-native-${{ matrix.artifact }}.zip .
@@ -62,7 +62,7 @@ jobs:
           New-Item -ItemType Directory package
 
           Copy-Item build/Release/node_llm_native.node package/
-          Copy-Item package.json package/
+          Copy-Item LICENSE package/
           Copy-Item README.md package/
 
           Compress-Archive `
