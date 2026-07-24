@@ -78,7 +78,10 @@ node-llm-native/
 npm install node-llm-native
 ```
 
-# Prerequisites
+# Manual
+
+
+## Prerequisites
 
 Before building, install:
 
@@ -103,10 +106,6 @@ macOS
 
 ---
 
-## Manual
-
-
-
 ## Clone
 
 ```bash
@@ -129,7 +128,7 @@ npm install
 
 ---
 
-# Build
+## Build
 
 ```bash
 npm run build
