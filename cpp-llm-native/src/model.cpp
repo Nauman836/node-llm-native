@@ -3,8 +3,11 @@
 #include "llama.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -38,9 +41,114 @@ namespace
 
         return path;
     }
+
+    std::string build_generic_chat_prompt(const std::vector<Model::ChatMessage>& messages)
+    {
+        std::ostringstream prompt;
+
+        for (const auto& msg : messages)
+        {
+            if (msg.role == "system")
+            {
+                prompt << msg.content << "\n\n";
+            }
+            else if (msg.role == "user")
+            {
+                prompt << "User: " << msg.content << "\n";
+            }
+            else if (msg.role == "assistant")
+            {
+                prompt << "Assistant: " << msg.content << "\n";
+            }
+        }
+
+        prompt << "Assistant:";
+        return prompt.str();
+    }
+
+    std::vector<llama_chat_message> convert_messages(const std::vector<Model::ChatMessage>& messages)
+    {
+        std::vector<llama_chat_message> result;
+        result.reserve(messages.size());
+
+        for (const auto& msg : messages)
+        {
+            llama_chat_message lm;
+            lm.role = msg.role.c_str();
+            lm.content = msg.content.c_str();
+            result.push_back(lm);
+        }
+
+        return result;
+    }
+
+    std::string get_model_chat_template(const llama_model* model)
+    {
+        const char* key = "tokenizer.chat_template";
+        int32_t size_needed = llama_model_meta_val_str(model, key, nullptr, 0);
+        if (size_needed <= 0)
+        {
+            return {};
+        }
+
+        std::vector<char> buffer(size_needed + 1, '\0');
+        int32_t result = llama_model_meta_val_str(model, key, buffer.data(), static_cast<int32_t>(buffer.size()));
+        if (result <= 0)
+        {
+            return {};
+        }
+
+        return std::string(buffer.data());
+    }
+
+    bool has_native_chat_template(const llama_model* model)
+    {
+        return !get_model_chat_template(model).empty();
+    }
+
+    std::string apply_native_template(const llama_model* model, const std::vector<Model::ChatMessage>& messages, bool add_assistant_prefix)
+    {
+        std::string tmpl = get_model_chat_template(model);
+        if (tmpl.empty())
+        {
+            return {};
+        }
+
+        auto llama_messages = convert_messages(messages);
+
+        int32_t required_size = llama_chat_apply_template(
+            tmpl.c_str(),
+            llama_messages.data(),
+            llama_messages.size(),
+            add_assistant_prefix,
+            nullptr,
+            0
+        );
+
+        if (required_size < 0)
+        {
+            return {};
+        }
+
+        std::vector<char> buffer(required_size + 1, '\0');
+        int32_t result = llama_chat_apply_template(
+            tmpl.c_str(),
+            llama_messages.data(),
+            llama_messages.size(),
+            add_assistant_prefix,
+            buffer.data(),
+            static_cast<int32_t>(buffer.size())
+        );
+
+        if (result < 0)
+        {
+            return {};
+        }
+
+        return std::string(buffer.data());
+    }
 }
 
-// Pimpl implementation struct — all llama types live here
 struct Model::Impl
 {
     llama_model* model = nullptr;
@@ -53,6 +161,8 @@ struct Model::Impl
 Model::~Model()
 {
     reset();
+    delete impl_;
+    impl_ = nullptr;
 }
 
 void Model::reset()
@@ -233,4 +343,123 @@ std::string Model::generate(const std::string &prompt, int max_tokens)
     }
 
     return output;
+}
+
+std::string Model::chat(const std::vector<ChatMessage>& messages, int max_tokens)
+{
+    if (!impl_ || !impl_->loaded || impl_->model == nullptr)
+    {
+        return {};
+    }
+
+    std::string chat_prompt;
+    bool using_native_template = false;
+
+    if (has_native_chat_template(impl_->model))
+    {
+        chat_prompt = apply_native_template(impl_->model, messages, true);
+        if (!chat_prompt.empty())
+        {
+            using_native_template = true;
+        }
+    }
+
+    if (chat_prompt.empty())
+    {
+        chat_prompt = build_generic_chat_prompt(messages);
+    }
+
+    std::string response = generate(chat_prompt, max_tokens);
+
+    size_t pos = 0;
+    while (pos < response.size() && std::isspace(static_cast<unsigned char>(response[pos])))
+    {
+        ++pos;
+    }
+    if (pos > 0)
+    {
+        response = response.substr(pos);
+    }
+
+    if (!using_native_template)
+    {
+        const std::string stop_markers[] = {"User:", "Assistant:", "Human:", "AI:"};
+        for (const auto& marker : stop_markers)
+        {
+            size_t stop_pos = response.find(marker);
+            if (stop_pos != std::string::npos)
+            {
+                response = response.substr(0, stop_pos);
+                break;
+            }
+        }
+    }
+    else
+    {
+        const std::string assistant_prefixes[] = {"Assistant", "assistant", "<|assistant|>", "<|im_start|>assistant"};
+        for (const auto& prefix : assistant_prefixes)
+        {
+            size_t stop_pos = response.find(prefix);
+            if (stop_pos != std::string::npos)
+            {
+                response = response.substr(0, stop_pos);
+                break;
+            }
+        }
+    }
+
+    while (!response.empty() && std::isspace(static_cast<unsigned char>(response.back())))
+    {
+        response.pop_back();
+    }
+
+    return response;
+}
+
+// Static: get all available backends
+std::vector<Model::BackendInfo> Model::get_backends()
+{
+    std::vector<BackendInfo> result;
+
+    size_t devCount = ggml_backend_dev_count();
+    for (size_t i = 0; i < devCount; ++i)
+    {
+        ggml_backend_dev_t dev = ggml_backend_dev_get(i);
+        if (!dev)
+            continue;
+
+        const char* name = ggml_backend_dev_name(dev);
+        const char* desc = ggml_backend_dev_description(dev);
+
+        BackendInfo info;
+        info.name = name ? name : "unknown";
+        info.description = desc ? desc : "unknown";
+        info.is_cpu = (name && std::strcmp(name, "CPU") == 0);
+        result.push_back(info);
+    }
+
+    return result;
+}
+
+// Static: get primary (preferred) backend name
+std::string Model::get_primary_backend()
+{
+    size_t devCount = ggml_backend_dev_count();
+    for (size_t i = 0; i < devCount; ++i)
+    {
+        ggml_backend_dev_t dev = ggml_backend_dev_get(i);
+        if (!dev)
+            continue;
+
+        const char* name = ggml_backend_dev_name(dev);
+        if (!name)
+            continue;
+
+        if (std::strcmp(name, "CPU") != 0)
+        {
+            return name;
+        }
+    }
+
+    return "CPU";
 }

@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -15,6 +16,9 @@ namespace
             Napi::Function func = DefineClass(env, "Model", {
                                                                 InstanceMethod("load", &ModelWrapper::Load),
                                                                 InstanceMethod("generate", &ModelWrapper::Generate),
+                                                                InstanceMethod("chat", &ModelWrapper::Chat),
+                                                                StaticMethod("getBackends", &ModelWrapper::GetBackends),
+                                                                StaticMethod("getPrimaryBackend", &ModelWrapper::GetPrimaryBackend),
                                                             });
             constructor = Napi::Persistent(func);
             constructor.SuppressDestruct();
@@ -69,6 +73,78 @@ namespace
             return Napi::String::New(info.Env(), model_.generate(prompt, max_tokens));
         }
 
+        Napi::Value Chat(const Napi::CallbackInfo &info)
+        {
+            Napi::Env env = info.Env();
+
+            if (info.Length() < 1 || !info[0].IsArray())
+            {
+                throw Napi::TypeError::New(env, "Expected messages array as first argument");
+            }
+
+            Napi::Array messagesArray = info[0].As<Napi::Array>();
+            std::vector<Model::ChatMessage> messages;
+
+            uint32_t length = messagesArray.Length();
+            for (uint32_t i = 0; i < length; i++)
+            {
+                Napi::Value item = messagesArray[i];
+                if (!item.IsObject())
+                {
+                    throw Napi::TypeError::New(env, "Each message must be an object");
+                }
+
+                Napi::Object msgObj = item.As<Napi::Object>();
+                Model::ChatMessage msg;
+
+                if (!msgObj.Has("role") || !msgObj.Get("role").IsString())
+                {
+                    throw Napi::TypeError::New(env, "Each message must have a 'role' string");
+                }
+                msg.role = msgObj.Get("role").As<Napi::String>();
+
+                if (!msgObj.Has("content") || !msgObj.Get("content").IsString())
+                {
+                    throw Napi::TypeError::New(env, "Each message must have a 'content' string");
+                }
+                msg.content = msgObj.Get("content").As<Napi::String>();
+
+                messages.push_back(msg);
+            }
+
+            int max_tokens = 512;
+            if (info.Length() >= 2 && info[1].IsNumber())
+            {
+                max_tokens = info[1].As<Napi::Number>().Int32Value();
+            }
+
+            std::string response = model_.chat(messages, max_tokens);
+            return Napi::String::New(env, response);
+        }
+
+        static Napi::Value GetBackends(const Napi::CallbackInfo &info)
+        {
+            Napi::Env env = info.Env();
+            auto backends = Model::get_backends();
+
+            Napi::Array arr = Napi::Array::New(env);
+            for (size_t i = 0; i < backends.size(); ++i)
+            {
+                Napi::Object obj = Napi::Object::New(env);
+                obj.Set("name", backends[i].name);
+                obj.Set("description", backends[i].description);
+                obj.Set("isCpu", backends[i].is_cpu);
+                arr.Set(static_cast<uint32_t>(i), obj);
+            }
+
+            return arr;
+        }
+
+        static Napi::Value GetPrimaryBackend(const Napi::CallbackInfo &info)
+        {
+            return Napi::String::New(info.Env(), Model::get_primary_backend());
+        }
+
         Model model_;
         static Napi::FunctionReference constructor;
     };
@@ -79,10 +155,9 @@ namespace
 Napi::Value BuildInfo(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-
     Napi::Object obj = Napi::Object::New(env);
 
-    obj.Set("backend", "CPU");
+    obj.Set("backend", Model::get_primary_backend());
 
 #ifdef _WIN32
     obj.Set("platform", "win32");
@@ -99,6 +174,19 @@ Napi::Value BuildInfo(const Napi::CallbackInfo &info)
 #else
     obj.Set("arch", "unknown");
 #endif
+
+    // Also include full backends list
+    auto backends = Model::get_backends();
+    Napi::Array arr = Napi::Array::New(env);
+    for (size_t i = 0; i < backends.size(); ++i)
+    {
+        Napi::Object b = Napi::Object::New(env);
+        b.Set("name", backends[i].name);
+        b.Set("description", backends[i].description);
+        b.Set("isCpu", backends[i].is_cpu);
+        arr.Set(static_cast<uint32_t>(i), b);
+    }
+    obj.Set("backends", arr);
 
     return obj;
 }

@@ -1,42 +1,67 @@
-const { Model, createModel } = require("../");
+const { Model, createModel, buildInfo } = require("../");
 
-// Beginner-friendly: just pass a model path string
-const beginnerModel = new Model(
-  "/home/nauman/Desktop/CodingFiles/models/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf",
-);
-
-// Advanced: pass an options object for full control
-const advancedModel = createModel({
-  model:
-    "/home/nauman/Desktop/CodingFiles/models/MiniCPM5-1B-Claude-Opus-Fable5-V2-Thinking-Q8_0.gguf",
-  device: "auto",
-  gpuLayers: -1,
-  contextSize: 2048,
-  threads: 4,
-  temperature: 0.7,
-});
+const MODEL_PATH =
+  "/home/nauman/Desktop/CodingFiles/models/qwen2.5-1.5b-instruct-q4_k_m.gguf";
 
 (async () => {
   try {
-    console.log("Loading model...");
-    const beginnerLoaded = await beginnerModel.load();
-    console.log("Model loaded:", beginnerLoaded ? "yes" : "no");
+    console.log("=== Build Information ===");
+    console.log(buildInfo());
 
-    const prompt = "Hello, how are you?";
-    const reply = await beginnerModel.generate(prompt, 24);
-    console.log("\nPrompt:");
-    console.log(prompt);
-    console.log("\nModel reply:");
+    console.log("\nPrimary Backend:");
+    console.log(Model.getPrimaryBackend());
+
+    console.log("\nAvailable Backends:");
+    console.log(Model.getBackends());
+
+    console.log("\n==============================");
+    console.log(" Beginner API");
+    console.log("==============================");
+
+    const beginner = new Model(MODEL_PATH);
+
+    // No need to call load()
+    const reply = await beginner.chat(
+      "Hello! Tell me something interesting about JavaScript.",
+      128
+    );
+
+    console.log("\nAssistant:");
     console.log(reply);
 
-    const advancedLoaded = await advancedModel.load();
-    console.log("\nAdvanced model loaded:", advancedLoaded ? "yes" : "no");
-    const jokePrompt = "Tell me a short joke.";
-    const jokeReply = await advancedModel.chat(jokePrompt, 20);
-    console.log("\nPrompt:");
-    console.log(jokePrompt);
-    console.log("\nModel reply:");
-    console.log(jokeReply);
+    console.log("\n==============================");
+    console.log(" Advanced API");
+    console.log("==============================");
+
+    const advanced = createModel({
+      model: MODEL_PATH,
+      device: "auto",
+      gpuLayers: -1,
+      contextSize: 2048,
+      threads: 4,
+      temperature: 0.7,
+    });
+
+    await advanced.load();
+
+    const messages = [
+      {
+        role: "system",
+        content: "You are a helpful programming assistant.",
+      },
+      {
+        role: "user",
+        content: "Explain promises in JavaScript.",
+      },
+    ];
+
+    const answer = await advanced.chat(messages, 256);
+
+    console.log("\nAssistant:");
+    console.log(answer);
+
+    console.log("\nResolved Configuration:");
+    console.log(advanced.getConfig());
   } catch (error) {
     console.error("Example failed:", error.message);
     process.exit(1);

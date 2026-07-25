@@ -1,6 +1,6 @@
 {
   "name": "node-llm-native",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Native Node.js wrapper for llama.cpp with a lightweight GGUF model loader",
   "license": "MIT",
   "author": "Muhammad Nauman <numanch836@gmail.com>",
@@ -30,11 +30,11 @@
     "gguf"
   ],
   "dependencies": {
-    "node-addon-api": "^8.9.0",
     "unzipper": "^0.12.5"
   },
   "devDependencies": {
-    "cmake-js": "^8.0.0"
+    "cmake-js": "^8.0.0",
+    "node-addon-api": "^8.9.0"
   },
   "files": [
     "scripts/install.js",
