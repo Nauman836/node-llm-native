@@ -49,11 +49,25 @@ class Model {
     }
 
     this.options = normalized;
+
+    // The C++ constructor calls model_.load() with the FULL options object
+    // (gpuLayers, contextSize, threads, temperature). We must NOT call
+    // load() again — that would reload with default parameters and lose
+    // the user's settings.
     this.instance = addon.createModel(normalized);
-    this.loaded = false;
+
+    // Check if the C++ constructor succeeded
+    this.loaded = this.instance.isLoaded();
   }
 
   async load(modelPath = this.options.model) {
+    // FIX: Don't double-load! The C++ constructor already loaded the model
+    // with the full options. Calling load() again would reset everything
+    // and use default parameters, losing gpuLayers/contextSize/threads/temperature.
+    if (this.loaded) {
+      return true;
+    }
+
     const ok = this.instance.load(modelPath);
     this.loaded = ok;
     return ok;
@@ -70,12 +84,6 @@ class Model {
     return this.instance.generate(prompt, maxTokens);
   }
 
-  /**
-   * Chat-style generation with message history.
-   * @param {Array<{role: string, content: string}>} messages - Conversation messages
-   * @param {number} maxTokens - Maximum tokens to generate
-   * @returns {Promise<string>} - Assistant's response
-   */
   async chat(messages, maxTokens = 512) {
     if (!this.loaded) {
       const loaded = await this.load();
@@ -84,7 +92,6 @@ class Model {
       }
     }
 
-    // Normalize single string prompt to message array
     if (typeof messages === "string") {
       messages = [{ role: "user", content: messages }];
     }
@@ -93,7 +100,6 @@ class Model {
       throw new TypeError("chat() expects an array of messages or a string prompt");
     }
 
-    // Validate message format
     for (const msg of messages) {
       if (!msg || typeof msg !== "object") {
         throw new TypeError("Each message must be an object with 'role' and 'content'");
@@ -104,7 +110,6 @@ class Model {
       if (msg.content === undefined || msg.content === null) {
         throw new TypeError("Each message must have a 'content' field");
       }
-      // Convert content to string if needed
       msg.content = String(msg.content);
     }
 
@@ -115,20 +120,10 @@ class Model {
     return { ...this.options };
   }
 
-  // ── Static backend info methods ──
-
-  /**
-   * Get the primary (preferred) backend name.
-   * @returns {string} - e.g. "Metal", "CUDA", "CPU"
-   */
   static getPrimaryBackend() {
     return addon.Model.getPrimaryBackend();
   }
 
-  /**
-   * Get all available backends.
-   * @returns {Array<{name: string, description: string, isCpu: boolean}>}
-   */
   static getBackends() {
     return addon.Model.getBackends();
   }
@@ -138,7 +133,6 @@ function createModel(options = {}) {
   return new Model(options);
 }
 
-// Build info with runtime backend detection
 function buildInfo() {
   const info = addon.buildInfo();
   return info;

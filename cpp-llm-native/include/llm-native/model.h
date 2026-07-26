@@ -2,6 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <functional>
+#include <memory>
+
+struct llama_model;
+struct llama_context;
+struct common_sampler;
 
 class Model
 {
@@ -9,7 +15,10 @@ public:
     Model() = default;
     ~Model();
 
-    bool load(const std::string& path, int gpu_layers = 99, int context_size = 2048, int threads = 4, float temperature = 0.7f);
+    bool load(const std::string& path, int gpu_layers = 99, int context_size = 2048,
+              int threads = 4, float temperature = 0.7f);
+
+    bool is_loaded() const;
 
     std::string generate(const std::string& prompt, int max_tokens = 64);
 
@@ -18,9 +27,16 @@ public:
         std::string content;
     };
 
-    std::string chat(const std::vector<ChatMessage>& messages, int max_tokens = 512);
+    // reasoning_content is populated when the model's template supports
+    // splitting out a <think>-style block (via common_chat_parse); empty
+    // if the template/model doesn't produce one.
+    struct ChatResult {
+        std::string content;
+        std::string reasoning_content;
+    };
 
-    // Backend info — no llama types exposed
+    ChatResult chat(const std::vector<ChatMessage>& messages, int max_tokens = 512);
+
     struct BackendInfo {
         std::string name;
         std::string description;
@@ -32,8 +48,6 @@ public:
 
 private:
     void reset();
-    bool tokenize(const std::string& prompt, std::vector<int>& tokens) const;
-    std::string token_to_piece(int token) const;
 
     struct Impl;
     Impl* impl_ = nullptr;

@@ -22,8 +22,7 @@ const MODEL_PATH =
 
     // No need to call load()
     const reply = await beginner.chat(
-      "Hello! Tell me something interesting about JavaScript.",
-      128
+      "Hello! Tell me something interesting about JavaScript."
     );
 
     console.log("\nAssistant:");
@@ -44,18 +43,7 @@ const MODEL_PATH =
 
     await advanced.load();
 
-    const messages = [
-      {
-        role: "system",
-        content: "You are a helpful programming assistant.",
-      },
-      {
-        role: "user",
-        content: "Explain promises in JavaScript.",
-      },
-    ];
-
-    const answer = await advanced.chat(messages, 256);
+    const answer = await advanced.chat('explain python');
 
     console.log("\nAssistant:");
     console.log(answer);

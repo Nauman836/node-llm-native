@@ -14,12 +14,13 @@ namespace
         static Napi::Function Init(Napi::Env env)
         {
             Napi::Function func = DefineClass(env, "Model", {
-                                                                InstanceMethod("load", &ModelWrapper::Load),
-                                                                InstanceMethod("generate", &ModelWrapper::Generate),
-                                                                InstanceMethod("chat", &ModelWrapper::Chat),
-                                                                StaticMethod("getBackends", &ModelWrapper::GetBackends),
-                                                                StaticMethod("getPrimaryBackend", &ModelWrapper::GetPrimaryBackend),
-                                                            });
+                InstanceMethod("load",       &ModelWrapper::Load),
+                InstanceMethod("generate",   &ModelWrapper::Generate),
+                InstanceMethod("chat",       &ModelWrapper::Chat),
+                InstanceMethod("isLoaded",   &ModelWrapper::IsLoaded),
+                StaticMethod("getBackends",       &ModelWrapper::GetBackends),
+                StaticMethod("getPrimaryBackend", &ModelWrapper::GetPrimaryBackend),
+            });
             constructor = Napi::Persistent(func);
             constructor.SuppressDestruct();
             return func;
@@ -46,15 +47,28 @@ namespace
         }
 
     private:
+        Napi::Value IsLoaded(const Napi::CallbackInfo &info)
+        {
+            return Napi::Boolean::New(info.Env(), model_.is_loaded());
+        }
+
         Napi::Value Load(const Napi::CallbackInfo &info)
         {
+            Napi::Env env = info.Env();
+
+            // Already loaded — don't double-load with different parameters!
+            if (model_.is_loaded())
+            {
+                return Napi::Boolean::New(env, true);
+            }
+
             if (info.Length() < 1 || !info[0].IsString())
             {
-                throw Napi::TypeError::New(info.Env(), "Expected model path string");
+                throw Napi::TypeError::New(env, "Expected model path string");
             }
 
             const std::string path = info[0].As<Napi::String>();
-            return Napi::Boolean::New(info.Env(), model_.load(path));
+            return Napi::Boolean::New(env, model_.load(path));
         }
 
         Napi::Value Generate(const Napi::CallbackInfo &info)
@@ -118,8 +132,11 @@ namespace
                 max_tokens = info[1].As<Napi::Number>().Int32Value();
             }
 
-            std::string response = model_.chat(messages, max_tokens);
-            return Napi::String::New(env, response);
+            Model::ChatResult response = model_.chat(messages, max_tokens);
+            Napi::Object responseObj = Napi::Object::New(env);
+            responseObj.Set("content", Napi::String::New(env, response.content));
+            responseObj.Set("reasoning_content", Napi::String::New(env, response.reasoning_content));
+            return responseObj;
         }
 
         static Napi::Value GetBackends(const Napi::CallbackInfo &info)
@@ -175,7 +192,6 @@ Napi::Value BuildInfo(const Napi::CallbackInfo &info)
     obj.Set("arch", "unknown");
 #endif
 
-    // Also include full backends list
     auto backends = Model::get_backends();
     Napi::Array arr = Napi::Array::New(env);
     for (size_t i = 0; i < backends.size(); ++i)
