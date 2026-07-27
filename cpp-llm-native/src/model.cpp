@@ -15,6 +15,13 @@ struct Model::Impl
     bool loaded = false;
 };
 
+Model::~Model()
+{
+    reset();
+    delete impl_;
+    impl_ = nullptr;
+}
+
 void Model::reset()
 {
     if (!impl_) return;
