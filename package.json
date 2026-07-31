@@ -1,6 +1,6 @@
 {
   "name": "node-llm-native",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Native Node.js wrapper for llama.cpp with a lightweight GGUF model loader",
   "license": "MIT",
   "author": "Muhammad Nauman <numanch836@gmail.com>",
