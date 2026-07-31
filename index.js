@@ -81,6 +81,8 @@ class Model {
       }
     }
 
+    console.log("Generating...")
+
     return this.instance.generate(prompt, maxTokens);
   }
 
@@ -112,6 +114,8 @@ class Model {
       }
       msg.content = String(msg.content);
     }
+
+    console.log("Generating...")
 
     return this.instance.chat(messages, maxTokens);
   }
